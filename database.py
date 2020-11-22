@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import csv
 import copy
 import json
@@ -436,9 +437,16 @@ class RegisteredDatabase:
         Args:
             username (string): the user's Telegram username. 
         """
+        if not self._can_add_modify_user:
+            return "Mi spiace ma non è più possibile aggiungersi al Secret Santa o modificare i dati 😭."
+
         if not username in self._users.keys():
-            return 
+            return "Sembra che tu non sia tra i partecipanti al Secret Santa. Iscriviti con il comando /register"
+        
         self._users[username].status = status
+        msg = "Ok! Scrivi qui " 
+        msg +=  "il tuo indirizzo " if status == "address" else "il messaggio che vuoi lasciare al Secret Santa"
+        return msg
 
     def get_user_status(self, username):
         """Get the user status.

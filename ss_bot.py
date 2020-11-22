@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/python
 import csv 
 
@@ -95,17 +96,13 @@ def handle_myinfo(message):
 def handle_address(message):
 	"""Add an address to a registered user.
 	"""
-	db.set_user_status(message.from_user.username, "address")
-	reply = "Ottimo! Scrivi qui il tuo indirizzo: \n"
-	bot.reply_to(message, reply)
+	bot.reply_to(message, db.set_user_status(message.from_user.username, "address"))
 
 @bot.message_handler(commands=['add_message', 'modify_message'])
 def handle_message_to_ss(message):
 	"""Add an address to a registered user.
 	"""
-	db.set_user_status(message.from_user.username, "message")
-	reply = "Ottimo! Scrivi qui il messaggio che vuoi lasciare al tuo Secret Santa: \n"
-	bot.reply_to(message, reply)
+	bot.reply_to(message, db.set_user_status(message.from_user.username, "message"))
 
 @bot.message_handler(commands=['assign_me'])
 def handle_assign_me(message):
