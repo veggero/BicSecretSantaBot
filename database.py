@@ -69,7 +69,8 @@ class RegisteredDatabase:
         """
         for fp in os.listdir(self._path_to_db):
             if fp.endswith(".json"):
-                with open(fp, "r") as f_user:
+                path = self._path_to_db+ "/"+fp
+                with open(path, "r") as f_user:
                     user_dict = json.load(f_user)
                     user = User(user_dict["username"], user_dict["address"], user_dict["message"], user_dict["status"])
                     self._users[user_dict["username"]] = user
