@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import csv
 import copy
 import json
@@ -36,7 +37,7 @@ class RegisteredDatabase:
         self._users={}
         self._santas = {}
         self._can_add_modify_user=False
-        self._users_from_file()
+        self._users_from_dir()
         self._santas_from_file()
         self._settings_from_csv()
 
@@ -60,29 +61,46 @@ class RegisteredDatabase:
         with open(self._path_to_settings, "w") as csv_file:
             csv_file.write("%s"%self._can_add_modify_user)
 
-    def _users_from_file(self):
-        """Loadsthe users from a .json file at self._path_to_db.
+    def _users_from_dir(self):
+        """Load the users from a .json file at self._path_to_db.
+
         Side-effects:
             self._users (dict(string, string)): contains the username of reigstered users, their address/message/status.
         """
-        with open(self._path_to_db, "r") as fp:
-            users_dict = json.load(fp)
-            for username in users_dict.keys():
-                user = User(users_dict[username]["username"], users_dict[username]["address"], users_dict[username]["message"], users_dict[username]["status"])
-                self._users[username] = user
+        for fp in os.listdir(self._path_to_db):
+            if fp.endswith(".json"):
+                with open(fp, "r") as f_user:
+                    user_dict = json.load(f_user)
+                    user = User(user_dict["username"], user_dict["address"], user_dict["message"], user_dict["status"])
+                    self._users[user_dict["username"]] = user
         
-    def _file_from_users(self):
+    def _dir_from_users(self):
         """Dump self._users to a .json file.
         """
-        with open(self._path_to_db, "w") as fp:
-            json.dump(self._users, fp, default=lambda o: o.__dict__)
+        for username in self._users.keys():
+            path = self._path_to_db + "/"+username+".json"
+            with open(path, "w") as fp:
+                json.dump(self._users[username], fp, default=lambda o: o.__dict__)
 
-    def update(self):
-        """Updates the database.
+    def _update_user_db(self, username):
+        """Update the data in the database regarding the user username.
+
+        Args:
+            username (string): the user-s Telegram username.
         """
-        self._file_from_users()
-        self._users_from_file()
+        path = self._path_to_db + "/"+username+".json"
+        with open(path, "w") as fp:
+            json.dump(self._users[username], fp, default=lambda o: o.__dict__)
 
+    def _remove_user_db(self, username):
+        """Update the data in the database regarding the user username.
+
+        Args:
+            username (string): the user-s Telegram username.
+        """
+        path = self._path_to_db + "/"+username+".json"
+        os.remove(path)
+            
     def update_settings(self):
         """Dumps the current settings to the database.
         """
@@ -221,7 +239,7 @@ class RegisteredDatabase:
         else:
             user = User(username)
             self._users[username] = user
-            self.update()
+            self._update_user_db(username)
             reply = "Congratulazioni! Sei stato correttamente aggiunto alla lista di utenti nel Secret Santa🎁. \n"
         reply+= "Questi sono i dati che abbiamo su di te:\n" + self.print_user_info(username)
         reply+= "Se vuoi essere rimosso dalla lista dei partecipanti, usa il comando /delete_me.\n"
@@ -245,7 +263,7 @@ class RegisteredDatabase:
             reply+= "Se vuoi registrarti usa il comando /register \n"
         else:
             self._users[username].address = address
-            self.update()
+            self._update_user_db(username)
             reply = "Il tuo indirizzo è stato correttamente aggiornato.\n"
         reply+="Queste sono le informazioni che abbiamo su di te: \n"+self.print_user_info(username)
         return reply
@@ -269,7 +287,7 @@ class RegisteredDatabase:
             reply+= "Se vuoi registrarti usa il comando /register\n"
         else:
             self._users[username].message = message
-            self.update()
+            self._update_user_db(username)
             reply = "Il tuo messaggio al Secret Santa è stato correttamente aggiornato.\n"
         reply+="Queste sono le informazioni che abbiamo su di te: \n"+self.print_user_info(username)
         return reply
@@ -291,7 +309,7 @@ class RegisteredDatabase:
             reply = "Non eri presente tra gli utenti registrati per il Secret Santa 🕵️‍♂️.\n"
         else:
             del self._users[username]
-            self.update()
+            self._remove_user_db(username)
             reply = "Sei stato correttamente eliminato dagli utenti che partecipano al Secret Santa 😢.\n"
         reply+="Queste sono le informazioni che abbiamo su di te: \n"+self.print_user_info(username)
         return reply

@@ -21,7 +21,7 @@ def read_token(path):
 API_TOKEN = read_token("api_token.csv")
 
 bot = telebot.TeleBot(API_TOKEN)
-db = RegisteredDatabase("registered_users.json", "settings.csv")
+db = RegisteredDatabase("users", "settings.csv")
 
 # Handle '/start' and '/help'
 

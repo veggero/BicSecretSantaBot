@@ -10,7 +10,7 @@ Le istruzioni si basano sull'idea che tu sia su una piattaforma Linux.
 ## Running the bot
 Per provare il bot, ti conviene creare un tuo bot seguendo le istruzioni del [BotFather](https://telegram.me/BotFather).
 Successivamente:
-- esegui lo script `init_files.sh`, questo inizializzerà quattro files: `api_token.csv`, `assignments.json`,`settings.csv`  e `registered_users.json`.
+- esegui lo script `init_files.sh`, questo inizializzerà tre files: `api_token.csv`, `assignments.json`,`settings.csv`  e una cartella vuota `users`.
 - copia il token di autenticazione del tuo bot e incollalo nel file `api_token.csv`.
 - esegui `python ss_bot.py`
 
