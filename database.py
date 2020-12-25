@@ -8,7 +8,7 @@ import random
 class User:
     """Represents an user. 
     """
-    def __init__(self, username, address="", message="", status=""):
+    def __init__(self, username="", address="", message="", status="", **kwargs):
         self.username = username
         self.address = address
         self.message = message
@@ -69,17 +69,16 @@ class RegisteredDatabase:
         """
         for fp in os.listdir(self._path_to_db):
             if fp.endswith(".json"):
-                path = self._path_to_db+ "/"+fp
+                path = f'{self._path_to_db}/{fp}'
                 with open(path, "r") as f_user:
-                    user_dict = json.load(f_user)
-                    user = User(user_dict["username"], user_dict["address"], user_dict["message"], user_dict["status"])
+                    user = User(**json.load(f_user))
                     self._users[user_dict["username"]] = user
         
     def _dir_from_users(self):
         """Dump self._users to a .json file.
         """
-        for username in self._users.keys():
-            path = self._path_to_db + "/"+username+".json"
+        for username in self._users:
+            path = f'{self._path_to_db}/{username}.json'
             with open(path, "w") as fp:
                 json.dump(self._users[username], fp, default=lambda o: o.__dict__)
 
@@ -89,7 +88,7 @@ class RegisteredDatabase:
         Args:
             username (string): the user-s Telegram username.
         """
-        path = self._path_to_db + "/"+username+".json"
+        path = f'{self._path_to_db}/{username}.json'
         with open(path, "w") as fp:
             json.dump(self._users[username], fp, default=lambda o: o.__dict__)
 
@@ -99,7 +98,7 @@ class RegisteredDatabase:
         Args:
             username (string): the user-s Telegram username.
         """
-        path = self._path_to_db + "/"+username+".json"
+        path = f'{self._path_to_db}/{username}.json'
         os.remove(path)
             
     def update_settings(self):
@@ -150,22 +149,22 @@ class RegisteredDatabase:
         """
         msg = ""
         if not self._santas:
-            msg= "Sembra che le assegnazioni non siano ancora avvenute!\n"
-            if username not in self._users.keys():
+            msg = "Sembra che le assegnazioni non siano ancora avvenute!\n"
+            if username not in self._users:
                 # Not registered
                 msg += "Sei ancora in tempo per registrarti, usa il comando /register!\n"
             elif not self._users[username].address:
-                msg+="Ricordati di aggiornare il tuo indirizzo! \n"
-                msg+="Queste sono le informazioni che ho su di te: "+self.print_user_info(username)
-                msg +="Pazienta ancora un po', le assegnazioni dovrebbero avvenire il 2 Dicembre. \n"
+                msg += "Ricordati di aggiornare il tuo indirizzo! \n"
+                msg += "Queste sono le informazioni che ho su di te: "+self.print_user_info(username)
+                msg += "Pazienta ancora un po', le assegnazioni dovrebbero avvenire il 2 Dicembre. \n"
             else:
-                msg+="Pazienta ancora un po', le assegnazioni dovrebbero avvenire il 2 Dicembre. \n"
+                msg += "Pazienta ancora un po', le assegnazioni dovrebbero avvenire il 2 Dicembre. \n"
             return msg
-        elif not username in self._santas.keys():
+        elif not username in self._santas:
             msg = "Sembra che non ti sia stato assegnato nessuno. Avevi inserito tutte le informazioni necessarie?\n"
         else:
-            msg+="Queste sono le informazioni dell'utente che ti è stato assegnato!\n" + self.print_other_user_info(self._santas[username])
-            msg+="\nE' una persona davvero speciale, buona fortuna!\n"
+            msg += "Queste sono le informazioni dell'utente che ti è stato assegnato!\n" + self.print_other_user_info(self._santas[username])
+            msg += "\nE' una persona davvero speciale, buona fortuna!\n"
         return msg
 
     def get_incomplete_users(self):
@@ -176,16 +175,16 @@ class RegisteredDatabase:
         """
         msg = ""
         not_valid = [user.username for user in self._users.values() if not user.address]
-        n_tot = len(self._users.keys())
+        n_tot = len(self._users)
         n_valid = n_tot-len(not_valid) 
-        msg += str(n_valid)+"/"+str(n_tot) + " utenti hanno inserito il loro indizzo.\n"
+        msg += f'{n_valid}/{n_tot} utenti hanno inserito il loro indizzo.\n'
 
-        if n_valid <2:
-            msg+= "Non sono sufficienti per procedere alle assegnazioni."
+        if n_valid < 2:
+            msg += "Non sono sufficienti per procedere alle assegnazioni."
 
         if not_valid:
-            msg+=",".join("@"+username for username in not_valid)
-            msg+="\n non hanno ancora inserito il loro indirizzo. \n" #TODO singular/plural
+            msg += ",".join("@"+username for username in not_valid)
+            msg += "\n non hanno ancora inserito il loro indirizzo. \n" #TODO singular/plural
         
         return msg
 
@@ -242,8 +241,8 @@ class RegisteredDatabase:
             self._users[username] = user
             self._update_user_db(username)
             reply = "Congratulazioni! Sei stato correttamente aggiunto alla lista di utenti nel Secret Santa🎁. \n"
-        reply+= "Questi sono i dati che abbiamo su di te:\n" + self.print_user_info(username)
-        reply+= "Se vuoi essere rimosso dalla lista dei partecipanti, usa il comando /delete_me.\n"
+        reply += "Questi sono i dati che abbiamo su di te:\n" + self.print_user_info(username)
+        reply += "Se vuoi essere rimosso dalla lista dei partecipanti, usa il comando /delete_me.\n"
         return reply
     
     def add_address(self, username, address):
@@ -306,13 +305,13 @@ class RegisteredDatabase:
             return "Mi spiace ma non è più possibile aggiungersi al Secret Santa o modificare i dati 😭.\n"
 
         reply = ""
-        if not username in self._users.keys():
+        if not username in self._users:
             reply = "Non eri presente tra gli utenti registrati per il Secret Santa 🕵️‍♂️.\n"
         else:
             del self._users[username]
             self._remove_user_db(username)
             reply = "Sei stato correttamente eliminato dagli utenti che partecipano al Secret Santa 😢.\n"
-        reply+="Queste sono le informazioni che abbiamo su di te: \n"+self.print_user_info(username)
+        reply += "Queste sono le informazioni che abbiamo su di te: \n"+self.print_user_info(username)
         return reply
     
     def toggle_registrations(self):
@@ -360,8 +359,7 @@ class RegisteredDatabase:
         """
         if not self._users.keys():
             return "Sii il primo a registrarti per il Secret Santa! 🎁🎁\n"
-        msg ="-"
-        msg+="-".join("@"+username+"\n" for username in self._users.keys())
+        msg = '-' + "-".join("@"+username+"\n" for username in self._users.keys())
         return msg
     
     def get_user_list(self):
@@ -370,7 +368,7 @@ class RegisteredDatabase:
         Returns:
             [list(string)]: list of the usernames of the registered users.
         """
-        return self._users.keys()
+        return [*self._users]
 
     def is_registered(self, username):
         """Check if an user is registered.
@@ -381,7 +379,7 @@ class RegisteredDatabase:
         Returns:
             bool: True if the user is registered, false otherwise.
         """
-        return username in self._users.keys()
+        return username in self._users
     
     def print_other_user_info(self, username):
         """Print the information about another user (intended after santas assignment).
@@ -391,21 +389,21 @@ class RegisteredDatabase:
         Returns:
             string: a message containing the information of the user username.
         """
-        reply =""
+        reply = ""
         if not username in self._users.keys():
-            reply = "OH oh! Qualcosa è andato storto! Non conosco " + username + "\n"
-            reply+= "E' Colpa di quel cane del programmatore. Digliene due ! \n"
+            reply = f"OH oh! Qualcosa è andato storto! Non conosco { username }\n" \
+                    "E' Colpa di quel cane del programmatore. Digliene due ! \n"
             return reply 
         reply = "👤: " + username + "\n"
         addr = self._users[username].address
         msg = self._users[username].message 
         if not addr:
-            reply = "OPS! Sembra che "+username+ " non abbia inserito un indirizzo. "
-            reply+="Questo non sarebbe dovuto succedere!\n"
+            reply = f"OPS! Sembra che {username} non abbia inserito un indirizzo. " \
+                    "Questo non sarebbe dovuto succedere!\n"
         else:
-            reply+="🏠 :" + addr + "\n" 
+            reply += "🏠 :" + addr + "\n" 
         if msg:
-            reply+="📬: " + msg + "\n"
+            reply += "📬: " + msg + "\n"
         return reply
         
 
@@ -446,8 +444,7 @@ class RegisteredDatabase:
         Args:
             username (string): the user's Telegram username. 
         """
-        if not username in self._users.keys():
-            return 
+        if not username in self._users: return 
         self._users[username].reset_status()
     
     def set_user_status(self, username, status):
@@ -459,12 +456,12 @@ class RegisteredDatabase:
         if not self._can_add_modify_user:
             return "Mi spiace ma non è più possibile aggiungersi al Secret Santa o modificare i dati 😭."
 
-        if not username in self._users.keys():
+        if not username in self._users:
             return "Sembra che tu non sia tra i partecipanti al Secret Santa. Iscriviti con il comando /register"
         
         self._users[username].status = status
-        msg = "Ok! Scrivi qui " 
-        msg +=  "il tuo indirizzo " if status == "address" else "il messaggio che vuoi lasciare al Secret Santa"
+        msg = "Ok! Scrivi qui " \
+              ("il tuo indirizzo " if status == "address" else "il messaggio che vuoi lasciare al Secret Santa")
         return msg
 
     def get_user_status(self, username):
@@ -476,6 +473,5 @@ class RegisteredDatabase:
         Returns:
             string: the user status. 
         """
-        if not username in self._users.keys():
-            return ""
+        if not username in self._users: return ""
         return self._users[username].status
